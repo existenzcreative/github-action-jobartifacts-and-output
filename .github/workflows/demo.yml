@@ -25,6 +25,13 @@ jobs:
         run: npm ci
       - name: Build website
         run: npm run build
+      - name: Upload artifacts #We want to store the dist folder and the package.json file, so we can inspect them later on. This is done by using the upload-artifact action.
+        uses: actions/upload-artifact@v3 #This action is provided by GitHub and allows us to upload artifacts to the GitHub servers.
+        with:
+          name: dist-files
+          path: |
+            dist
+            package.json
   deploy:
     needs: build
     runs-on: ubuntu-latest
