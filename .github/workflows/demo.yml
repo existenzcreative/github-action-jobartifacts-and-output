@@ -36,5 +36,11 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Get build artifacts
+        uses: actions/download-artifact@v3 #This action is provided by GitHub and allows us to download artifacts from the GitHub servers.
+        with:
+          name: dist-files
+      - name: Output contents
+        run: ls -R #We want to inspect the contents of the dist folder and the package.json file, so we can see if the build was successful.
       - name: Deploy
         run: echo "Deploying..."
