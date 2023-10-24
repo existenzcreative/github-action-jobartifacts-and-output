@@ -9,6 +9,11 @@ jobs:
     steps:
       - name: Get code
         uses: actions/checkout@v3
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm #The path to the cache. This is where the dependencies will be stored.
+          key: deps-node-modules-${{ hashFiles('**/package-lock.json') }} #The key is used to identify the cache. It is a combination of the name of the cache and a hash of the package-lock.json file.
       - name: Install dependencies
         run: npm ci
       - name: Lint code
@@ -18,13 +23,23 @@ jobs:
   build:
     needs: test
     runs-on: ubuntu-latest
+    outputs:
+      script-file: ${{ steps.publish.outputs.script-file }} #Script-file is the name of the output. We can use this name to reference the output in other steps.
     steps:
       - name: Get code
         uses: actions/checkout@v3
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm #The path to the cache. This is where the dependencies will be stored.
+          key: deps-node-modules-${{ hashFiles('**/package-lock.json') }} #The key is used to identify the cache. It is a combination of the name of the cache and a hash of the package-lock.json file.
       - name: Install dependencies
         run: npm ci
       - name: Build website
         run: npm run build
+      - name: Publish JS filename
+        id: publish
+        run: find dist/assets/*.js -type f -execdir echo 'script-file={}' >> $GITHUB_OUTPUT ';' #Linux command to find the JS file that was built and output it to a file.
       - name: Upload artifacts #We want to store the dist folder and the package.json file, so we can inspect them later on. This is done by using the upload-artifact action.
         uses: actions/upload-artifact@v3 #This action is provided by GitHub and allows us to upload artifacts to the GitHub servers.
         with:
@@ -42,5 +57,7 @@ jobs:
           name: dist-files
       - name: Output contents
         run: ls -R #We want to inspect the contents of the dist folder and the package.json file, so we can see if the build was successful.
+      - name: Output filename
+        run: echo ${{ needs.build.outputs.script-file }} #Echo the filename of the JS file that was built.
       - name: Deploy
         run: echo "Deploying..."
